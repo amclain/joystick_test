@@ -14,6 +14,7 @@ defmodule JoystickTest.Application do
         # Children for all targets
         # Starts a worker by calling: JoystickTest.Worker.start_link(arg)
         # {JoystickTest.Worker, arg},
+        {JoystickTest.Gadget, nil},
       ] ++ children(target())
 
     Supervisor.start_link(children, opts)
