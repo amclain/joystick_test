@@ -1,15 +1,17 @@
 defmodule JoystickTest.Gadget do
-  use GenServer, restart: :temporary
+  @moduledoc """
+  Manage the system's USB gadget device.
+  """
 
   require Logger
 
   @gadget_name "hidg"
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, nil)
-  end
-
-  def init(_) do
+  @doc """
+  Configure the USB gadget device.
+  Call this function on application startup.
+  """
+  def configure do
     :os.cmd('mount -t configfs none /sys/kernel/config')
 
     device_settings = %{
@@ -51,7 +53,7 @@ defmodule JoystickTest.Gadget do
       "MaxPower" => "500",
       "strings" => %{
         "0x409" => %{
-          "configuration" => "RNDIS and ECM Ethernet with HID Keyboard"
+          "configuration" => "HID Keyboard"
         }
       }
     }
@@ -75,8 +77,6 @@ defmodule JoystickTest.Gadget do
     reload_gadget_device
 
     Logger.info "USB gadget initialized"
-
-    {:ok, nil}
   end
 
   defp reload_gadget_device do

@@ -6,6 +6,8 @@ defmodule JoystickTest.Application do
   use Application
 
   def start(_type, _args) do
+    JoystickTest.Gadget.configure
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: JoystickTest.Supervisor]
@@ -14,7 +16,6 @@ defmodule JoystickTest.Application do
         # Children for all targets
         # Starts a worker by calling: JoystickTest.Worker.start_link(arg)
         # {JoystickTest.Worker, arg},
-        {JoystickTest.Gadget, nil},
       ] ++ children(target())
 
     Supervisor.start_link(children, opts)
