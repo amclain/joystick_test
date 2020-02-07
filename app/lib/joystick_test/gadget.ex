@@ -14,14 +14,14 @@ defmodule JoystickTest.Gadget do
   def configure do
     :os.cmd('mount -t configfs none /sys/kernel/config')
 
-    device_settings = %{
-      "bcdUSB" => "0x0200",
-      "bDeviceClass" => "0xEF",
-      "bDeviceSubClass" => "0x02",
-      "bDeviceProtocol" => "0x01",
+    device_definition = %{
+      "bcdUSB" => "0x0200",        # USB specification release 2.0
+      "bDeviceClass" => "0x03",    # HID device
+      "bDeviceSubClass" => "0x00", # Unused with HID devices
+      "bDeviceProtocol" => "0x00", # Device doesn't supoort a boot interface
       "idVendor" => "0x1209",
       "idProduct" => "0x0071",
-      "bcdDevice" => "0x0100",
+      "bcdDevice" => "0x0001",     # Device release number, assigned by manufacturer
       "os_desc" => %{
         "use" => "1",
         "b_vendor_code" => "0xcd",
@@ -29,31 +29,38 @@ defmodule JoystickTest.Gadget do
       },
       "strings" => %{
         "0x409" => %{
-          "manufacturer" => "Alex McLain",
+          "manufacturer" => "",
           "product" => "Joystick Test",
           "serialnumber" => ""
         }
       }
     }
 
-    hid_keyboard_settings = %{
-      "protocol" => "1",
-      "report_length" => "8",
-      "subclass" => "1",
-      "report_desc" =>
-        <<0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
-          0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x81, 0x01, 0x19, 0x00, 0x29, 0xFF,
-          0x15, 0x00, 0x25, 0xFF, 0x75, 0x08, 0x95, 0x06, 0x81, 0x00, 0x05, 0x08, 0x19, 0x01,
-          0x29, 0x05, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x05, 0x91, 0x02, 0x95, 0x03,
-          0x91, 0x01, 0xC0>>
+    joystick_function = %{
+      "report_length" => "1",
+      "report_desc" => <<
+        0x05, 0x01, # UsagePage (Generic Desktop)
+        0x09, 0x04, # Usage (Joystick)
+        0xA1, 0x01, # Collection (Application)
+          0x05, 0x09, # UsagePage (Buttons)
+          0x19, 0x01, # Usage Minimum (Button 1),
+          0x29, 0x04, # Usage Maximum (Button 4),
+          0x15, 0x00, # Logical Minimum (0),
+          0x25, 0x01, # Logical Maximum (1),
+          0x95, 0x04, # Report Count (4),
+          0x75, 0x01, # Report Size (1),
+                      # Unit (None)
+          0x81, 0x02, # Input (Data, Variable, Absolute)
+        0xC0, # End Collection
+      >>
     }
 
-    config1_settings = %{
+    joystick_config = %{
       "bmAttributes" => "0xC0",
       "MaxPower" => "500",
       "strings" => %{
         "0x409" => %{
-          "configuration" => "HID Keyboard"
+          "configuration" => "HID Joystick"
         }
       }
     }
@@ -61,11 +68,11 @@ defmodule JoystickTest.Gadget do
     function_list = ["hid.usb0"]
 
     with {:create_device, :ok} <-
-           {:create_device, USBGadget.create_device(@gadget_name, device_settings)},
+           {:create_device, USBGadget.create_device(@gadget_name, device_definition)},
          {:create_acm, :ok} <-
-           {:create_acm, USBGadget.create_function(@gadget_name, "hid.usb0", hid_keyboard_settings)},
+           {:create_acm, USBGadget.create_function(@gadget_name, "hid.usb0", joystick_function)},
          {:create_config, :ok} <-
-           {:create_config, USBGadget.create_config(@gadget_name, "c.1", config1_settings)},
+           {:create_config, USBGadget.create_config(@gadget_name, "c.1", joystick_config)},
          {:link_functions, :ok} <-
            {:link_functions, USBGadget.link_functions(@gadget_name, "c.1", function_list)},
          {:link_os_desc, :ok} <- {:link_os_desc, USBGadget.link_os_desc(@gadget_name, "c.1")} do
