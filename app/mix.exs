@@ -15,8 +15,10 @@ defmodule JoystickTest.MixProject do
       build_embedded:       true,
       aliases:              [loadconfig: [&bootstrap/1]],
       deps:                 deps(),
+      docs:                 docs(),
+      source_url:           "https://github.com/amclain/joystick_test",
       releases:             [{@app, release()}],
-      preferred_cli_target: [run: :host, test: :host]
+      preferred_cli_target: [run: :host, test: :host],
     ]
   end
 
@@ -50,6 +52,9 @@ defmodule JoystickTest.MixProject do
       {:circuits_gpio, "~> 0.1"},
       {:afk,           "~> 0.2"},
 
+      # Host dependencies
+      {:ex_doc, "~> 0.21.3", targets: :host, only: :dev, runtime: false},
+
       # Dependencies for all targets except :host
       {:nerves_runtime,     "~> 0.6", targets: @all_targets},
       {:usb_gadget, github: "nerves-project/usb_gadget", targets: @all_targets},
@@ -63,6 +68,14 @@ defmodule JoystickTest.MixProject do
         runtime: false,
         targets: :bbb
       },
+    ]
+  end
+
+  defp docs do
+    [
+      extras: [
+        "README.md",
+      ]
     ]
   end
 
